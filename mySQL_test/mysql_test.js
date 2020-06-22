@@ -34,10 +34,15 @@ app.get('/', function(request, response) { //at localhost:3000/
 	response.sendFile(path.join(__dirname + '/register.html'));				//this is to register page first
 }); 
 
+app.get('/login', function(request,response) {
+	response.sendFile(path.join(__dirname + '/test_page.html'));
+})
+
 	//register form with bcrypt
-app.post('/register', function(request, response) {
+app.post('/register', async function(request, response) {
 	const password = request.body.password;
-	const encryptedPassword = awaitbcrypt.hash (password, saltRounds)
+	const saltRounds = 10; //Salt rounds can be changed
+	const encryptedPassword = await bcrypt.hash (password, saltRounds)
 
 	var accounts={
 		"username":request.body.username,
@@ -48,20 +53,20 @@ app.post('/register', function(request, response) {
 	connection.query('INSERT INTO accounts SET ?', accounts, function (error, results, fields) {
 		if (error) {
 			response.send('Something went wrong');
-			esponse.end();
+			response.end();
 		} else {
-			response.send('succesfully registered');
-			response.sendFile(path.join(__dirname + '/test_page.html'));
+			response.redirect('/login');
+			response.end();
 		}	
 	});
 });
 
 	//login form with bcrypt
-app.post('/auth', function(request, response) {
+app.post('/auth', async function(request, response) {
 	var username = request.body.username;
 	var password = request.body.password;
 	if (username && password) {
-		connection.query('SELECT * FROM accounts WHERE username = ?', [username], function(error, results, fields) {
+		connection.query('SELECT * FROM accounts WHERE username = ?', [username], async function(error, results, fields) {
 			if (error) {
 				response.send('Something went wrong');
 			} else {
